@@ -1,53 +1,35 @@
 from pathlib import Path
+from typing import Any, Callable, Optional
 
 import pandas as pd
-from pandas import Series
+from pandas import DataFrame, Series
 
 
 def parse_checkins_file(input_file: Path) -> None:
-    df = pd.read_csv(input_file)
+    df: DataFrame = pd.read_csv(input_file)
 
     print(f"Total number of beers: {len(df)}")
 
-    beer_type: Series[int] = df["beer_type"].value_counts()
+    _print_field_data(df, "beer_type", "distinct styles")
+    _print_field_data(df, "beer_type", "grouped styles", _string_split)
+    _print_field_data(df, "brewery_name", "breweries")
+    _print_field_data(df, "brewery_country", "brewery countries")
+    _print_field_data(df, "venue_name", "venues")
+    _print_field_data(df, "venue_country", "venue countries")
 
-    print(f"\nTotal number of distinct styles {beer_type.count()}")
-    print("Top 5 styles: ")
-    for value, count in beer_type.head(5).items():
+
+def _print_field_data(df: DataFrame, field: str, field_friendly_name: str, transform: Optional[Callable[[Series], Series]] = None) -> None:
+    series: Series[Any] = df[field] if transform is None else transform(df[field])
+    counts: Series[int] = series.value_counts()
+
+    print(f"\nTotal number of {field_friendly_name} {counts.count()}")
+    print(f"Top 5 {field_friendly_name}: ")
+    for value, count in counts.head(5).items():
         print(f"\t{value}: {count}")
 
-    style_groups: Series[int] = df['beer_type'].str.split('-').str[0].value_counts()
 
-    print(f"\nTotal number of styles {style_groups.count()}")
-    print("Top 5 styles: ")
-    for value, count in style_groups.head(5).items():
-        print(f"\t{value}: {count}")
-
-    breweries: Series[int] = df["brewery_name"].value_counts()
-
-    print(f"\nTotal number of breweries {breweries.count()}")
-    print("Top 5 breweries: ")
-    for value, count in breweries.head(5).items():
-        print(f"\t{value}: {count}")
-
-    brewery_country: Series[int] = df["brewery_country"].value_counts()
-
-    print(f"\nTotal number of unique brewery countries {brewery_country.count()}")
-    print("Top 5 countries: ")
-    for value, count in brewery_country.head(5).items():
-        print(f"\t{value}: {count}")
-
-    venue: Series[int] = df["venue_name"].value_counts()
-    print(f"\nTotal number of venues {venue.count()}")
-    print("Top 5 venues: ")
-    for value, count in venue.head(5).items():
-        print(f"\t{value}: {count}")
-
-    venue_country: Series[int] = df["venue_country"].value_counts()
-    print(f"\nTotal number of venue countries {venue_country.count()}")
-    print("Top 5 venue countries: ")
-    for value, count in venue_country.head(5).items():
-        print(f"\t{value}: {count}")
+def _string_split(series: Series) -> Series:
+    return series.str.split('-').str[0]
 
 
 if __name__ == '__main__':
