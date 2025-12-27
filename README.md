@@ -1,6 +1,15 @@
 # UntappdStats
 Parses your Untappd checkins to generate stats.
 
+## Usage
+
+* Arguments:
+  * `checkins_file` - Path to your Untappd checkins (csv) file.
+
+```
+python untappd_stats.py --checkins_file "Path/to/checkins/data.csv"
+```
+
 ## Current stats
 
 * Total number of check-ins
