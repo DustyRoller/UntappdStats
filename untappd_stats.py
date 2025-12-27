@@ -8,7 +8,23 @@ from pandas import DataFrame, Series
 def parse_checkins_file(input_file: Path) -> None:
     df: DataFrame = pd.read_csv(input_file)
 
-    print(f"Total number of beers: {len(df)}")
+    total_num_beers: int = len(df)
+
+    print(f"Total number of beers: {total_num_beers}")
+
+    # Set the `created_at` data to be datetimes.
+    df['created_at'] = pd.to_datetime(df['created_at'], errors='raise')
+    years: Series[int] = df['created_at'].dt.year.value_counts()
+
+    print(f"\nNumber of active years: {years.count()}")
+
+    average_beers: float = round(total_num_beers/years.count(), 2)
+
+    print(f"\nAverage number of beers per year: {average_beers}")
+
+    # Only getting 1 year but still loop over the values.
+    for year, count in years.head(1).items():
+        print(f"\nBusiest year was: {year} with {count} checkins")
 
     _print_field_data(df, "beer_type", "distinct styles")
     _print_field_data(df, "beer_type", "grouped styles", _string_split)
