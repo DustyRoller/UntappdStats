@@ -2,29 +2,39 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 
 import pandas as pd
-from pandas import DataFrame, Series
+from pandas import DataFrame, Series, Timestamp
 
 
 def parse_checkins_file(input_file: Path) -> None:
     df: DataFrame = pd.read_csv(input_file)
 
     total_num_beers: int = len(df)
-
     print(f"Total number of beers: {total_num_beers}")
 
-    # Set the `created_at` data to be datetimes.
+    # Get the number of unique beer and brewery combinations.
+    num_unique_beers: int = df[['beer_name', 'brewery_name']].drop_duplicates().shape[0]
+    print(f"Total number of unique beers: {num_unique_beers}")
+
+    # Convert the `created_at` data to be datetimes.
     df['created_at'] = pd.to_datetime(df['created_at'], errors='raise')
-    years: Series[int] = df['created_at'].dt.year.value_counts()
 
-    print(f"\nNumber of active years: {years.count()}")
+    # Get the number of active years.
+    years: Series[int] = df['created_at'].dt.year
+    print(f"\nNumber of active years: {years.value_counts().count()}")
 
-    average_beers: float = round(total_num_beers/years.count(), 2)
+    # Get first check-in.
+    first_checkin: Timestamp = df['created_at'].min()
+    print(f"First check-in at {first_checkin.date()}")
 
+    # Get the average number of beers per year.
+    average_beers: float = round(total_num_beers / years.nunique(), 2)
     print(f"\nAverage number of beers per year: {average_beers}")
 
-    # Only getting 1 year but still loop over the values.
-    for year, count in years.head(1).items():
-        print(f"\nBusiest year was: {year} with {count} checkins")
+    # Get the busiest year.
+    year_counts: Series[int] = years.value_counts()
+    busiest_year: int = year_counts.idxmax()
+    busiest_count: int = year_counts.max()
+    print(f"\nBusiest year was {busiest_year} with {busiest_count} check-ins")
 
     _print_field_data(df, "beer_type", "distinct styles")
     _print_field_data(df, "beer_type", "grouped styles", _string_split)
@@ -50,24 +60,19 @@ def _string_split(series: Series) -> Series:
 
 if __name__ == '__main__':
     from argparse import ArgumentParser, Namespace
+    from sys import exit
 
     arg_parser: ArgumentParser = ArgumentParser()
-
-    arg_parser.add_argument('--checkins_file', required=True)
+    arg_parser.add_argument('--checkins_file', required=True, type=Path)
 
     args: Namespace = arg_parser.parse_args()
 
-    checkins_file: Path = Path(args.checkins_file)
+    if not args.checkins_file.is_file():
+        exit(f"File does not exist: {args.checkins_file}")
 
     expected_file_ext: str = ".csv"
-    if checkins_file.suffix != expected_file_ext:
-        print(f"checkins_file must be of type {expected_file_ext}")
-        exit(-1)
+    if args.checkins_file.suffix != expected_file_ext:
+        exit(f"checkins_file must be a {expected_file_ext} file")
 
-    if not checkins_file.is_file():
-        print(f"checkins_file {checkins_file} does not exist")
-        exit(-1)
-
-    print(f"Parsing {checkins_file}")
-
-    parse_checkins_file(checkins_file)
+    print(f"Parsing {args.checkins_file}\n")
+    parse_checkins_file(args.checkins_file)
