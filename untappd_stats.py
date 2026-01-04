@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Any, Callable, Optional
 
+from dateutil.relativedelta import relativedelta
+
 import pandas as pd
 from pandas import DataFrame, Series, Timestamp
 
@@ -19,19 +21,20 @@ def parse_checkins_file(input_file: Path) -> None:
     df['created_at'] = pd.to_datetime(df['created_at'], errors='raise')
 
     # Get the number of active years.
-    years: Series[int] = df['created_at'].dt.year
-    print(f"\nNumber of active years: {years.value_counts().count()}")
+    first_checkin: Timestamp = df['created_at'].min()
+    last_checkin: Timestamp = df['created_at'].max()
+    active_period: relativedelta = relativedelta(last_checkin, first_checkin)
+    print(f"\nActive for: {active_period.years} years and {active_period.months} months")
 
     # Get first check-in.
-    first_checkin: Timestamp = df['created_at'].min()
     print(f"First check-in at {first_checkin.date()}")
 
     # Get the average number of beers per year.
-    average_beers: float = round(total_num_beers / years.nunique(), 2)
+    average_beers: float = round(total_num_beers / active_period.years, 2)
     print(f"\nAverage number of beers per year: {average_beers}")
 
     # Get the busiest year.
-    year_counts: Series[int] = years.value_counts()
+    year_counts: Series[int] = df['created_at'].dt.year.value_counts()
     busiest_year: int = year_counts.idxmax()
     busiest_count: int = year_counts.max()
     print(f"\nBusiest year was {busiest_year} with {busiest_count} check-ins")
