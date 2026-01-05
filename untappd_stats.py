@@ -5,7 +5,7 @@ from typing import Any, Callable, Optional
 from dateutil.relativedelta import relativedelta
 
 import pandas as pd
-from pandas import DataFrame, Series, Timestamp
+from pandas import DataFrame, DataFrameGroupBy, Series, Timestamp
 from pandas.core.groupby import DataFrameGroupBy
 
 
@@ -167,9 +167,44 @@ def parse_checkins_file(input_file: Path) -> None:
         _print_field_data(group, "serving_type", "serving type")
 
 
-def _print_field_data(df: DataFrame, field: str, field_friendly_name: str, transform: Optional[Callable[[Series], Series]] = None) -> None:
+    # Group the data by years.
+    year_groups: DataFrameGroupBy[Any] = df.groupby(df.created_at.dt.year)
+    for year, group in year_groups:
+        print(year)
+        print(f"\t{len(group)} beers")
+        _print_field_data(group, "beer_type", "distinct styles")
+        _print_field_data(group, "beer_type", "grouped styles", _string_split)
+        _print_field_data(group, "brewery_name", "breweries")
+        _print_field_data(group, "brewery_country", "brewery countries")
+        _print_field_data(group, "venue_name", "venues")
+        _print_field_data(group, "venue_country", "venue countries")
+        _print_field_data(group, "serving_type", "serving type")
+
+
+class BeerStats:
+    num_beers: int
+    num_unique_beers: int
+    most_popular_beer: Optional[str]
+    num_unique_styles: int
+    most_popular_styles: list[str]
+    num_unique_grouped_styles: int
+    most_popular_grouped_styles: list[str]
+    num_unique_breweries: int
+    most_popular_breweries: list[str]
+    num_unique_brewery_countries: int
+    most_popular_brewery_countries: list[str]
+    num_unique_venues: int
+    most_popular_venues: list[str]
+    num_unique_venue_countries: int
+    most_popular_venue_countries: list[str]
+    most_popular_serving_style: list[str]
+
+
+def _get_stats(df: DataFrame, field: str, field_friendly_name: str, transform: Optional[Callable[[Series], Series]] = None) -> BeerStats:
     series: Series[Any] = df[field] if transform is None else transform(df[field])
     counts: Series[int] = series.value_counts()
+
+
 
     print(f"\nTotal number of {field_friendly_name} {counts.count()}")
     print(f"Top 5 {field_friendly_name}: ")
