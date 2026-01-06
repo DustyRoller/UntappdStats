@@ -77,23 +77,13 @@ def parse_checkins_file(input_file: Path) -> None:
     max_ibu_beer: Any = df.iloc[max_ibu_index]
     print(f"\nHighest IBU: {max_ibu_beer["beer_name"]} ({max_ibu_beer["brewery_name"]}) - {max_ibu_beer["beer_ibu"]}")
 
-    # Get the average IBU.
-    print(f"\nAverage IBU: {round(df["beer_ibu"].mean(), 2)}")
-
-    _print_field_data(df, "beer_type", "distinct styles")
-    _print_field_data(df, "beer_type", "grouped styles", _string_split)
-
-    # Get the percent of styles that there is a check in for.
-    with Path("styles.json").open(encoding='utf-8') as f:
-        styles: list[str] = json.load(f)
-
-        checked_in_styles: set[str] = set(df['beer_type'])
-
-        styles_percentage: float = (len(checked_in_styles) / len(styles)) * 100
-        print(f"\nPercent of styles: {round(styles_percentage, 2)}%")
-
-    _print_field_data(df, "brewery_name", "breweries")
-    _print_field_data(df, "brewery_country", "brewery countries")
+    _get_stats(df, "beer_type", "distinct styles")
+    _get_stats(df, "beer_type", "grouped styles", _string_split)
+    _get_stats(df, "brewery_name", "breweries")
+    _get_stats(df, "brewery_country", "brewery countries")
+    _get_stats(df, "venue_name", "venues")
+    _get_stats(df, "venue_country", "venue countries")
+    _get_stats(df, "serving_type", "serving types")
 
     # Get the percent of brewery countries that there is a check in for.
     with Path("countries.json").open(encoding='utf-8') as f:
@@ -104,9 +94,6 @@ def parse_checkins_file(input_file: Path) -> None:
         brewery_countries_percentage: float = (len(checked_in_countries) / len(countries)) * 100
         print(f"\nPercent of brewery countries: {round(brewery_countries_percentage, 2)}%")
 
-    _print_field_data(df, "venue_name", "venues")
-    _print_field_data(df, "venue_country", "venue countries")
-    _print_field_data(df, "serving_type", "serving types")
 
     print("\nYear breakdown\n")
 
@@ -172,13 +159,13 @@ def parse_checkins_file(input_file: Path) -> None:
     for year, group in year_groups:
         print(year)
         print(f"\t{len(group)} beers")
-        _print_field_data(group, "beer_type", "distinct styles")
-        _print_field_data(group, "beer_type", "grouped styles", _string_split)
-        _print_field_data(group, "brewery_name", "breweries")
-        _print_field_data(group, "brewery_country", "brewery countries")
-        _print_field_data(group, "venue_name", "venues")
-        _print_field_data(group, "venue_country", "venue countries")
-        _print_field_data(group, "serving_type", "serving type")
+        _get_stats(group, "beer_type", "distinct styles")
+        _get_stats(group, "beer_type", "grouped styles", _string_split)
+        _get_stats(group, "brewery_name", "breweries")
+        _get_stats(group, "brewery_country", "brewery countries")
+        _get_stats(group, "venue_name", "venues")
+        _get_stats(group, "venue_country", "venue countries")
+        _get_stats(group, "serving_type", "serving type")
 
 
 class BeerStats:
@@ -203,8 +190,6 @@ class BeerStats:
 def _get_stats(df: DataFrame, field: str, field_friendly_name: str, transform: Optional[Callable[[Series], Series]] = None) -> BeerStats:
     series: Series[Any] = df[field] if transform is None else transform(df[field])
     counts: Series[int] = series.value_counts()
-
-
 
     print(f"\nTotal number of {field_friendly_name} {counts.count()}")
     print(f"Top 5 {field_friendly_name}: ")
