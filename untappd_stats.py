@@ -55,6 +55,7 @@ def parse_checkins_file(input_file: Path) -> None:
     _print_field_data(df, "brewery_country", "brewery countries")
     _print_field_data(df, "venue_name", "venues")
     _print_field_data(df, "venue_country", "venue countries")
+    _print_field_data(df, "serving_type", "serving types")
 
 
 def _print_field_data(df: DataFrame, field: str, field_friendly_name: str, transform: Optional[Callable[[Series], Series]] = None) -> None:
