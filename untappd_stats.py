@@ -39,6 +39,16 @@ def parse_checkins_file(input_file: Path) -> None:
     busiest_count: int = year_counts.max()
     print(f"\nBusiest year was {busiest_year} with {busiest_count} check-ins")
 
+    # Get the beer with the highest ABV.
+    max_abv_index: int = df["beer_abv"].idxmax()
+    max_abv_beer: Any = df.iloc[max_abv_index]
+    print(f"\nHighest ABV: {max_abv_beer["beer_name"]} ({max_abv_beer["brewery_name"]}) - {max_abv_beer["beer_abv"]}%")
+
+    # Get the beer with the highest IBU.
+    max_ibu_index: int = df["beer_ibu"].idxmax()
+    max_ibu_beer: Any = df.iloc[max_ibu_index]
+    print(f"\nHighest IBU: {max_ibu_beer["beer_name"]} ({max_ibu_beer["brewery_name"]}) - {max_ibu_beer["beer_ibu"]}")
+
     _print_field_data(df, "beer_type", "distinct styles")
     _print_field_data(df, "beer_type", "grouped styles", _string_split)
     _print_field_data(df, "brewery_name", "breweries")
