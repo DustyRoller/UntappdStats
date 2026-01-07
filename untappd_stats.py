@@ -11,15 +11,15 @@ from pandas.core.groupby import DataFrameGroupBy
 def parse_checkins_file(input_file: Path) -> None:
     df: DataFrame = pd.read_csv(input_file)
 
+    # Update the dataframe as required.
+    _update_dataframe(df)
+
     total_num_beers: int = len(df)
     print(f"Total number of beers: {total_num_beers}")
 
     # Get the number of unique beer and brewery combinations.
     num_unique_beers: int = df[['beer_name', 'brewery_name']].drop_duplicates().shape[0]
     print(f"Total number of unique beers: {num_unique_beers}")
-
-    # Convert the `created_at` data to be datetimes.
-    df['created_at'] = pd.to_datetime(df['created_at'], errors='raise')
 
     # Get the number of active years.
     first_checkin: Timestamp = df['created_at'].min()
@@ -86,6 +86,18 @@ def _print_field_data(df: DataFrame, field: str, field_friendly_name: str, trans
 
 def _string_split(series: Series) -> Series:
     return series.str.split('-').str[0]
+
+
+def _update_dataframe(df: DataFrame) -> None:
+    # Update the data so that it is in a more usable state.
+
+    # Do some initial modification of the data.
+    # Convert the `created_at` data to be datetimes.
+    df['created_at'] = pd.to_datetime(df['created_at'], errors='raise')
+
+    # Remove the venue country for `Untappd at Home` checkins so that
+    # it isn't included in the venue countries stats.
+    df.loc[df.venue_name == "Untappd at Home", "venue_country"] = None
 
 
 if __name__ == '__main__':
