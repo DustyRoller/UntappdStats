@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from typing import Any, Callable, Optional
 
@@ -54,6 +55,16 @@ def parse_checkins_file(input_file: Path) -> None:
     _print_field_data(df, "beer_type", "grouped styles", _string_split)
     _print_field_data(df, "brewery_name", "breweries")
     _print_field_data(df, "brewery_country", "brewery countries")
+
+    # Get the percent of brewery countries that there is a check in for.
+    with Path("countries.json").open() as f:
+        countries: list[str] = json.load(f)
+
+        checked_in_countries: set[str] = set(df['brewery_country'])
+
+        brewery_countries_percentage: float = (len(checked_in_countries) / len(countries)) * 100
+        print(f"\nPercent of brewery countries: {round(brewery_countries_percentage, 2)}%")
+
     _print_field_data(df, "venue_name", "venues")
     _print_field_data(df, "venue_country", "venue countries")
     _print_field_data(df, "serving_type", "serving types")
