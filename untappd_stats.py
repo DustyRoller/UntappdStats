@@ -41,6 +41,16 @@ def parse_checkins_file(input_file: Path) -> None:
     busiest_count: int = year_counts.max()
     print(f"\nBusiest year was {busiest_year} with {busiest_count} check-ins")
 
+    print("\nHighest rated beers:")
+    highest_rated: DataFrame = df.nlargest(5, "rating_score")
+    for _, row in highest_rated.iterrows():
+        print(f"\t{row["beer_name"]} ({row["brewery_name"]}) - {row["rating_score"]}")
+
+    print("\nLowest rated beers:")
+    lowest_rated: DataFrame = df.nsmallest(5, "rating_score")
+    for _, row in lowest_rated.iterrows():
+        print(f"\t{row["beer_name"]} ({row["brewery_name"]}) - {row["rating_score"]}")
+
     # Get the beer with the highest ABV.
     max_abv_index: int = df["beer_abv"].idxmax()
     max_abv_beer: Any = df.iloc[max_abv_index]
@@ -76,13 +86,16 @@ def parse_checkins_file(input_file: Path) -> None:
     for year, group in year_groups:
         print(f"\n{year}")
         print(f"\t{len(group)} beers")
-        _print_field_data(group, "beer_type", "distinct styles")
-        _print_field_data(group, "beer_type", "grouped styles", _string_split)
-        _print_field_data(group, "brewery_name", "breweries")
-        _print_field_data(group, "brewery_country", "brewery countries")
-        _print_field_data(group, "venue_name", "venues")
-        _print_field_data(group, "venue_country", "venue countries")
-        _print_field_data(group, "serving_type", "serving type")
+
+        print("\nHighest rated beers:")
+        year_highest_rated: DataFrame = group.nlargest(5, "rating_score")
+        for _, row in year_highest_rated.iterrows():
+            print(f"\t{row["beer_name"]} ({row["brewery_name"]}) - {row["rating_score"]}")
+
+        print("\nLowest rated beers:")
+        year_lowest_rated: DataFrame = group.nsmallest(5, "rating_score")
+        for _, row in year_lowest_rated.iterrows():
+            print(f"\t{row["beer_name"]} ({row["brewery_name"]}) - {row["rating_score"]}")
 
         # Get the beer with the highest ABV.
         year_max_abv_index: int = group["beer_abv"].idxmax()
@@ -93,6 +106,14 @@ def parse_checkins_file(input_file: Path) -> None:
         year_max_ibu_index: int = group["beer_ibu"].idxmax()
         year_max_ibu_beer: Any = df.iloc[year_max_ibu_index]
         print(f"\nHighest IBU: {year_max_ibu_beer["beer_name"]} ({year_max_ibu_beer["brewery_name"]}) - {year_max_ibu_beer["beer_ibu"]}")
+
+        _print_field_data(group, "beer_type", "distinct styles")
+        _print_field_data(group, "beer_type", "grouped styles", _string_split)
+        _print_field_data(group, "brewery_name", "breweries")
+        _print_field_data(group, "brewery_country", "brewery countries")
+        _print_field_data(group, "venue_name", "venues")
+        _print_field_data(group, "venue_country", "venue countries")
+        _print_field_data(group, "serving_type", "serving type")
 
 
 def _print_field_data(df: DataFrame, field: str, field_friendly_name: str, transform: Optional[Callable[[Series], Series]] = None) -> None:
