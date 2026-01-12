@@ -63,11 +63,21 @@ def parse_checkins_file(input_file: Path) -> None:
 
     _print_field_data(df, "beer_type", "distinct styles")
     _print_field_data(df, "beer_type", "grouped styles", _string_split)
+
+    # Get the percent of styles that there is a check in for.
+    with Path("styles.json").open(encoding='utf-8') as f:
+        styles: list[str] = json.load(f)
+
+        checked_in_styles: set[str] = set(df['beer_type'])
+
+        styles_percentage: float = (len(checked_in_styles) / len(styles)) * 100
+        print(f"\nPercent of styles: {round(styles_percentage, 2)}%")
+
     _print_field_data(df, "brewery_name", "breweries")
     _print_field_data(df, "brewery_country", "brewery countries")
 
     # Get the percent of brewery countries that there is a check in for.
-    with Path("countries.json").open() as f:
+    with Path("countries.json").open(encoding='utf-8') as f:
         countries: list[str] = json.load(f)
 
         checked_in_countries: set[str] = set(df['brewery_country'])
