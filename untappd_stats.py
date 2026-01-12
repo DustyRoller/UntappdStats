@@ -31,9 +31,10 @@ def parse_checkins_file(input_file: Path) -> None:
     # Get first check-in.
     print(f"First check-in at {first_checkin.date()}")
 
-    # Get the average number of beers per year.
-    average_beers: float = round(total_num_beers / active_period.years, 2)
-    print(f"\nAverage number of beers per year: {average_beers}")
+    # Get the average number of beers per year (only if years is greater than 0).
+    if active_period.years > 0:
+        average_beers: float = round(total_num_beers / active_period.years, 2)
+        print(f"\nAverage number of beers per year: {average_beers}")
 
     # Get the busiest year.
     year_counts: Series[int] = df['created_at'].dt.year.value_counts()
