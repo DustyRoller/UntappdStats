@@ -61,15 +61,24 @@ def parse_checkins_file(input_file: Path) -> None:
     for _, row in lowest_rated.iterrows():
         print(f"\t{row["beer_name"]} ({row["brewery_name"]}) - {row["rating_score"]}")
 
+    # Get the average rating.
+    print(f"\nAverage rating: {round(df["rating_score"].mean(), 2)}")
+
     # Get the beer with the highest ABV.
     max_abv_index: int = df["beer_abv"].idxmax()
     max_abv_beer: Any = df.iloc[max_abv_index]
     print(f"\nHighest ABV: {max_abv_beer["beer_name"]} ({max_abv_beer["brewery_name"]}) - {max_abv_beer["beer_abv"]}%")
 
+    # Get the average ABV.
+    print(f"\nAverage ABV: {round(df["beer_abv"].mean(), 2)}%")
+
     # Get the beer with the highest IBU.
     max_ibu_index: int = df["beer_ibu"].idxmax()
     max_ibu_beer: Any = df.iloc[max_ibu_index]
     print(f"\nHighest IBU: {max_ibu_beer["beer_name"]} ({max_ibu_beer["brewery_name"]}) - {max_ibu_beer["beer_ibu"]}")
+
+    # Get the average IBU.
+    print(f"\nAverage IBU: {round(df["beer_ibu"].mean(), 2)}")
 
     _print_field_data(df, "beer_type", "distinct styles")
     _print_field_data(df, "beer_type", "grouped styles", _string_split)
@@ -130,15 +139,24 @@ def parse_checkins_file(input_file: Path) -> None:
         for _, row in year_lowest_rated.iterrows():
             print(f"\t{row["beer_name"]} ({row["brewery_name"]}) - {row["rating_score"]}")
 
+        # Get the average rating.
+        print(f"\nAverage rating: {round(group["rating_score"].mean(), 2)}")
+
         # Get the beer with the highest ABV.
         year_max_abv_index: int = group["beer_abv"].idxmax()
         year_max_abv_beer: Any = df.iloc[year_max_abv_index]
         print(f"\nHighest ABV: {year_max_abv_beer["beer_name"]} ({year_max_abv_beer["brewery_name"]}) - {year_max_abv_beer["beer_abv"]}%")
 
+        # Get the average ABV.
+        print(f"\nAverage ABV: {round(group["beer_abv"].mean(), 2)}%")
+
         # Get the beer with the highest IBU.
         year_max_ibu_index: int = group["beer_ibu"].idxmax()
         year_max_ibu_beer: Any = df.iloc[year_max_ibu_index]
         print(f"\nHighest IBU: {year_max_ibu_beer["beer_name"]} ({year_max_ibu_beer["brewery_name"]}) - {year_max_ibu_beer["beer_ibu"]}")
+
+        # Get the average IBU.
+        print(f"\nAverage IBU: {round(group["beer_ibu"].mean(), 2)}")
 
         _print_field_data(group, "beer_type", "distinct styles")
         _print_field_data(group, "beer_type", "grouped styles", _string_split)
