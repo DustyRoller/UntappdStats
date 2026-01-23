@@ -22,6 +22,15 @@ def parse_checkins_file(input_file: Path) -> None:
     num_unique_beers: int = df[['beer_name', 'brewery_name']].drop_duplicates().shape[0]
     print(f"Total number of unique beers: {num_unique_beers}")
 
+    # Only print out if there any beers with more than one checkin
+    most_common_beers: Series[int] = df[['beer_name', 'brewery_name']].value_counts()
+    if most_common_beers.iloc[0] != 1:
+        print("\nMost checked in beers:")
+        for value, count in most_common_beers.head(5).items():
+            if count == 1:
+                break
+            print(f"\t{value[0]} ({value[1]}): {count}")
+
     # Get the number of active years.
     first_checkin: Timestamp = df['created_at'].min()
     last_checkin: Timestamp = df['created_at'].max()
@@ -97,6 +106,19 @@ def parse_checkins_file(input_file: Path) -> None:
     for year, group in year_groups:
         print(f"\n{year}")
         print(f"\t{len(group)} beers")
+
+        # Get the number of unique beer and brewery combinations.
+        year_num_unique_beers: int = group[['beer_name', 'brewery_name']].drop_duplicates().shape[0]
+        print(f"{year_num_unique_beers} unique beers")
+
+        # Only print out if there any beers with more than one checkin
+        year_most_common_beers: Series[int] = group[['beer_name', 'brewery_name']].value_counts()
+        if year_most_common_beers.iloc[0] != 1:
+            print("\nMost checked in beers:")
+            for value, count in year_most_common_beers.head(5).items():
+                if count == 1:
+                    break
+                print(f"\t{value[0]} ({value[1]}): {count}")
 
         print("\nHighest rated beers:")
         year_highest_rated: DataFrame = group.nlargest(5, "rating_score")
