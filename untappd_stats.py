@@ -77,6 +77,18 @@ def parse_checkins_file(input_file: Path) -> None:
     max_ibu_beer: Any = df.iloc[max_ibu_index]
     print(f"\nHighest IBU: {max_ibu_beer["beer_name"]} ({max_ibu_beer["brewery_name"]}) - {max_ibu_beer["beer_ibu"]}")
 
+    # Get the average IBU.
+    print(f"\nAverage IBU: {round(df["beer_ibu"].mean(), 2)}")
+
+    # Get the percent of styles that there is a check in for.
+    with Path("styles.json").open(encoding='utf-8') as f:
+        styles: list[str] = json.load(f)
+
+        checked_in_styles: set[str] = set(df['beer_type'])
+
+        styles_percentage: float = (len(checked_in_styles) / len(styles)) * 100
+        print(f"\nPercent of styles: {round(styles_percentage, 2)}%")
+
     _get_stats(df, "beer_type", "distinct styles")
     _get_stats(df, "beer_type", "grouped styles", _string_split)
     _get_stats(df, "brewery_name", "breweries")
