@@ -15,34 +15,15 @@ def parse_checkins_file(input_file: Path) -> None:
     # Update the dataframe as required.
     _update_dataframe(df)
 
-    total_num_beers: int = len(df)
-    print(f"Total number of beers: {total_num_beers}")
-
-    # Get the number of unique beer and brewery combinations.
-    num_unique_beers: int = df[['beer_name', 'brewery_name']].drop_duplicates().shape[0]
-    print(f"Total number of unique beers: {num_unique_beers}")
-
-    # Only print out if there any beers with more than one checkin
-    most_common_beers: Series[int] = df[['beer_name', 'brewery_name']].value_counts()
-    if most_common_beers.iloc[0] != 1:
-        print("\nMost checked in beers:")
-        for value, count in most_common_beers.head(5).items():
-            if count == 1:
-                break
-            print(f"\t{value[0]} ({value[1]}): {count}")
-
     # Get the number of active years.
     first_checkin: Timestamp = df['created_at'].min()
     last_checkin: Timestamp = df['created_at'].max()
     active_period: relativedelta = relativedelta(last_checkin, first_checkin)
-    print(f"\nActive for: {active_period.years} years and {active_period.months} months")
-
-    # Get first check-in.
-    print(f"First check-in at {first_checkin.date()}")
+    print(f"Active for: {active_period.years} years and {active_period.months} months")
 
     # Get the average number of beers per year (only if years is greater than 0).
     if active_period.years > 0:
-        average_beers: float = round(total_num_beers / active_period.years, 2)
+        average_beers: float = round(len(df) / active_period.years, 2)
         print(f"\nAverage number of beers per year: {average_beers}")
 
     # Get the busiest year.
@@ -50,38 +31,6 @@ def parse_checkins_file(input_file: Path) -> None:
     busiest_year: int = year_counts.idxmax()
     busiest_count: int = year_counts.max()
     print(f"\nBusiest year was {busiest_year} with {busiest_count} check-ins")
-
-    print("\nHighest rated beers:")
-    highest_rated: DataFrame = df.nlargest(5, "rating_score")
-    for _, row in highest_rated.iterrows():
-        print(f"\t{row["beer_name"]} ({row["brewery_name"]}) - {row["rating_score"]}")
-
-    print("\nLowest rated beers:")
-    lowest_rated: DataFrame = df.nsmallest(5, "rating_score")
-    for _, row in lowest_rated.iterrows():
-        print(f"\t{row["beer_name"]} ({row["brewery_name"]}) - {row["rating_score"]}")
-
-    # Get the average rating.
-    print(f"\nAverage rating: {round(df["rating_score"].mean(), 2)}")
-
-    # Get the beer with the highest ABV.
-    max_abv_index: int = df["beer_abv"].idxmax()
-    max_abv_beer: Any = df.iloc[max_abv_index]
-    print(f"\nHighest ABV: {max_abv_beer["beer_name"]} ({max_abv_beer["brewery_name"]}) - {max_abv_beer["beer_abv"]}%")
-
-    # Get the average ABV.
-    print(f"\nAverage ABV: {round(df["beer_abv"].mean(), 2)}%")
-
-    # Get the beer with the highest IBU.
-    max_ibu_index: int = df["beer_ibu"].idxmax()
-    max_ibu_beer: Any = df.iloc[max_ibu_index]
-    print(f"\nHighest IBU: {max_ibu_beer["beer_name"]} ({max_ibu_beer["brewery_name"]}) - {max_ibu_beer["beer_ibu"]}")
-
-    # Get the average IBU.
-    print(f"\nAverage IBU: {round(df["beer_ibu"].mean(), 2)}")
-
-    _print_field_data(df, "beer_type", "distinct styles")
-    _print_field_data(df, "beer_type", "grouped styles", _string_split)
 
     # Get the percent of styles that there is a check in for.
     with Path("data/styles.json").open(encoding='utf-8') as f:
@@ -92,9 +41,6 @@ def parse_checkins_file(input_file: Path) -> None:
         styles_percentage: float = (len(checked_in_styles) / len(styles)) * 100
         print(f"\nPercent of styles: {round(styles_percentage, 2)}%")
 
-    _print_field_data(df, "brewery_name", "breweries")
-    _print_field_data(df, "brewery_country", "brewery countries")
-
     # Get the percent of brewery countries that there is a check in for.
     with Path("data/countries.json").open(encoding='utf-8') as f:
         countries: list[str] = json.load(f)
@@ -104,81 +50,91 @@ def parse_checkins_file(input_file: Path) -> None:
         brewery_countries_percentage: float = (len(checked_in_countries) / len(countries)) * 100
         print(f"\nPercent of brewery countries: {round(brewery_countries_percentage, 2)}%")
 
-    _print_field_data(df, "venue_name", "venues")
-    _print_field_data(df, "venue_country", "venue countries")
-    _print_field_data(df, "serving_type", "serving types")
+    print("\nOverall stats")
+
+    _get_grouped_stats(df)
 
     print("\nYear breakdown\n")
 
-    # Group the data by years.
     year_groups: DataFrameGroupBy[Any] = df.groupby(df.created_at.dt.year)
     for year, group in year_groups:
-        print(f"\n{year}")
-        print(f"\t{len(group)} beers")
+        print(f"{year} stats")
+        _get_grouped_stats(group)
+        print()
 
-        # Get the number of unique beer and brewery combinations.
-        year_num_unique_beers: int = group[['beer_name', 'brewery_name']].drop_duplicates().shape[0]
-        print(f"{year_num_unique_beers} unique beers")
 
-        # Only print out if there any beers with more than one checkin
-        year_most_common_beers: Series[int] = group[['beer_name', 'brewery_name']].value_counts()
-        if year_most_common_beers.iloc[0] != 1:
-            print("\nMost checked in beers:")
-            for value, count in year_most_common_beers.head(5).items():
-                if count == 1:
-                    break
-                print(f"\t{value[0]} ({value[1]}): {count}")
+def _get_grouped_stats(df: DataFrame) -> None:
+    print(f"\tTotal number of beers: {len(df)}")
 
-        print("\nHighest rated beers:")
-        year_highest_rated: DataFrame = group.nlargest(5, "rating_score")
-        for _, row in year_highest_rated.iterrows():
-            print(f"\t{row["beer_name"]} ({row["brewery_name"]}) - {row["rating_score"]}")
+    # Get the number of unique beer and brewery combinations.
+    num_unique_beers: int = df[['beer_name', 'brewery_name']].drop_duplicates().shape[0]
+    print(f"\tTotal number of unique beers: {num_unique_beers}")
 
-        print("\nLowest rated beers:")
-        year_lowest_rated: DataFrame = group.nsmallest(5, "rating_score")
-        for _, row in year_lowest_rated.iterrows():
-            print(f"\t{row["beer_name"]} ({row["brewery_name"]}) - {row["rating_score"]}")
+    # Get first and last check-in.
+    print(f"\n\tFirst check-in at {df['created_at'].min()}")
+    print(f"\tLast check-in at {df['created_at'].max()}")
 
-        # Get the average rating.
-        print(f"\nAverage rating: {round(group["rating_score"].mean(), 2)}")
+    # Only print out if there any beers with more than one checkin.
+    most_common_beers: Series[int] = df[['beer_name', 'brewery_name']].value_counts()
+    if most_common_beers.iloc[0] != 1:
+        print("\n\tMost checked in beers:")
+        for value, count in most_common_beers.head(5).items():
+            if count == 1:
+                break
+            print(f"\t\t{value[0]} ({value[1]}): {count}")
 
-        # Get the beer with the highest ABV.
-        year_max_abv_index: int = group["beer_abv"].idxmax()
-        year_max_abv_beer: Any = df.iloc[year_max_abv_index]
-        print(f"\nHighest ABV: {year_max_abv_beer["beer_name"]} ({year_max_abv_beer["brewery_name"]}) - {year_max_abv_beer["beer_abv"]}%")
+    print("\n\tHighest rated beers:")
+    highest_rated: DataFrame = df.nlargest(5, "rating_score")
+    for _, row in highest_rated.iterrows():
+        print(f"\t\t{row["beer_name"]} ({row["brewery_name"]}) - {row["rating_score"]}")
 
-        # Get the average ABV.
-        print(f"\nAverage ABV: {round(group["beer_abv"].mean(), 2)}%")
+    print("\n\tLowest rated beers:")
+    lowest_rated: DataFrame = df.nsmallest(5, "rating_score")
+    for _, row in lowest_rated.iterrows():
+        print(f"\t\t{row["beer_name"]} ({row["brewery_name"]}) - {row["rating_score"]}")
 
-        # Get the beer with the highest IBU.
-        year_max_ibu_index: int = group["beer_ibu"].idxmax()
-        year_max_ibu_beer: Any = df.iloc[year_max_ibu_index]
-        print(f"\nHighest IBU: {year_max_ibu_beer["beer_name"]} ({year_max_ibu_beer["brewery_name"]}) - {year_max_ibu_beer["beer_ibu"]}")
+    # Get the average rating.
+    print(f"\n\tAverage rating: {round(df["rating_score"].mean(), 2)}")
 
-        # Get the average IBU.
-        print(f"\nAverage IBU: {round(group["beer_ibu"].mean(), 2)}")
+    # Get the beer with the highest ABV.
+    max_abv_index: int = df["beer_abv"].idxmax()
+    max_abv_beer: Any = df.loc[max_abv_index]
+    print(f"\n\tHighest ABV: {max_abv_beer["beer_name"]} ({max_abv_beer["brewery_name"]}) - {max_abv_beer["beer_abv"]}%")
 
-        _print_field_data(group, "beer_type", "distinct styles")
-        _print_field_data(group, "beer_type", "grouped styles", _string_split)
-        _print_field_data(group, "brewery_name", "breweries")
-        _print_field_data(group, "brewery_country", "brewery countries")
-        _print_field_data(group, "venue_name", "venues")
-        _print_field_data(group, "venue_country", "venue countries")
-        _print_field_data(group, "serving_type", "serving type")
+    # Get the average ABV.
+    print(f"\n\tAverage ABV: {round(df["beer_abv"].mean(), 2)}%")
+
+    # Get the beer with the highest IBU.
+    year_max_ibu_index: int = df["beer_ibu"].idxmax()
+    year_max_ibu_beer: Any = df.loc[year_max_ibu_index]
+    print(f"\n\tHighest IBU: {year_max_ibu_beer["beer_name"]} ({year_max_ibu_beer["brewery_name"]}) - {year_max_ibu_beer["beer_ibu"]}")
+
+    # Get the average IBU.
+    print(f"\n\tAverage IBU: {round(df["beer_ibu"].mean(), 2)}")
+
+    _print_field_data(df, "beer_type", "distinct styles")
+    _print_field_data(df, "beer_type", "grouped styles", _string_split)
+    _print_field_data(df, "brewery_name", "breweries")
+    _print_field_data(df, "brewery_country", "brewery countries")
+    _print_field_data(df, "venue_name", "venues")
+    _print_field_data(df, "venue_country", "venue countries")
+    _print_field_data(df, "serving_type", "serving type")
 
 
 def _print_field_data(df: DataFrame, field: str, field_friendly_name: str, transform: Optional[Callable[[Series], Series]] = None) -> None:
     series: Series[Any] = df[field] if transform is None else transform(df[field])
     counts: Series[int] = series.value_counts()
 
-    print(f"\nTotal number of {field_friendly_name} {counts.count()}")
-    print(f"Top 5 {field_friendly_name}: ")
-    for value, count in counts.head(5).items():
-        print(f"\t{value}: {count}")
+    count: int = counts.count()
+    if count:
+        print(f"\n\tTotal number of {field_friendly_name} {count}")
+        print(f"\tTop 5 {field_friendly_name}: ")
+        for value, count in counts.head(5).items():
+            print(f"\t\t{value}: {count}")
 
 
 def _string_split(series: Series) -> Series:
-    return series.str.split('-').str[0]
+    return series.str.split(' - ').str[0]
 
 
 def _update_dataframe(df: DataFrame) -> None:
