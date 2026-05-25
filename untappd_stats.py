@@ -17,8 +17,8 @@ def parse_checkins_file(input_file: Path) -> None:
     _update_dataframe(df)
 
     # Get the number of active years.
-    first_checkin: Timestamp = df['created_at'].min()
-    last_checkin: Timestamp = df['created_at'].max()
+    first_checkin: Timestamp = df.created_at.min()
+    last_checkin: Timestamp = df.created_at.max()
     active_period: relativedelta = relativedelta(last_checkin, first_checkin)
     print(f"Active for: {active_period.years} years and {active_period.months} months")
 
@@ -28,28 +28,26 @@ def parse_checkins_file(input_file: Path) -> None:
         print(f"\nAverage number of beers per year: {average_beers}")
 
     # Get the busiest year.
-    year_counts: Series[int] = df['created_at'].dt.year.value_counts()
+    year_counts: Series[int] = df.created_at.dt.year.value_counts()
     busiest_year: int = year_counts.idxmax()
     busiest_count: int = year_counts.max()
     print(f"\nBusiest year was {busiest_year} with {busiest_count} check-ins")
 
+    data_dir: Path = Path("data")
+
     # Get the percent of styles that there is a check in for.
-    with Path("data/styles.json").open(encoding='utf-8') as f:
-        styles: list[str] = json.load(f)
+    styles: list[str] = _load_data_file(data_dir / "styles.json")
+    checked_in_styles: set[str] = set(df.beer_type)
 
-        checked_in_styles: set[str] = set(df['beer_type'])
-
-        styles_percentage: float = (len(checked_in_styles) / len(styles)) * 100
-        print(f"\nPercent of styles: {round(styles_percentage, 2)}%")
+    styles_percentage: float = (len(checked_in_styles) / len(styles)) * 100
+    print(f"\nPercent of styles: {round(styles_percentage, 2)}%")
 
     # Get the percent of brewery countries that there is a check in for.
-    with Path("data/countries.json").open(encoding='utf-8') as f:
-        countries: list[str] = json.load(f)
+    countries: list[str] = _load_data_file(data_dir / "countries.json")
+    checked_in_countries: set[str] = set(df.brewery_country)
 
-        checked_in_countries: set[str] = set(df['brewery_country'])
-
-        brewery_countries_percentage: float = (len(checked_in_countries) / len(countries)) * 100
-        print(f"\nPercent of brewery countries: {round(brewery_countries_percentage, 2)}%")
+    brewery_countries_percentage: float = (len(checked_in_countries) / len(countries)) * 100
+    print(f"\nPercent of brewery countries: {round(brewery_countries_percentage, 2)}%")
 
     print("\nOverall stats")
 
@@ -72,8 +70,8 @@ def _get_grouped_stats(df: DataFrame) -> None:
     print(f"\tTotal number of unique beers: {num_unique_beers}")
 
     # Get first and last check-in.
-    print(f"\n\tFirst check-in at {df['created_at'].min()}")
-    print(f"\tLast check-in at {df['created_at'].max()}")
+    print(f"\n\tFirst check-in at {df.created_at.min()}")
+    print(f"\tLast check-in at {df.created_at.max()}")
 
     # Only print out if there any beers with more than one checkin.
     most_common_beers: Series[int] = df[['beer_name', 'brewery_name']].value_counts()
@@ -87,31 +85,31 @@ def _get_grouped_stats(df: DataFrame) -> None:
     print("\n\tHighest rated beers:")
     highest_rated: DataFrame = df.nlargest(5, "rating_score")
     for _, row in highest_rated.iterrows():
-        print(f"\t\t{row["beer_name"]} ({row["brewery_name"]}) - {row["rating_score"]}")
+        print(f"\t\t{row.beer_name} ({row.brewery_name}) - {row.rating_score}")
 
     print("\n\tLowest rated beers:")
     lowest_rated: DataFrame = df.nsmallest(5, "rating_score")
     for _, row in lowest_rated.iterrows():
-        print(f"\t\t{row["beer_name"]} ({row["brewery_name"]}) - {row["rating_score"]}")
+        print(f"\t\t{row.beer_name} ({row.brewery_name}) - {row.rating_score}")
 
     # Get the average rating.
-    print(f"\n\tAverage rating: {round(df["rating_score"].mean(), 2)}")
+    print(f"\n\tAverage rating: {round(df.rating_score.mean(), 2)}")
 
     # Get the beer with the highest ABV.
-    max_abv_index: int = df["beer_abv"].idxmax()
+    max_abv_index: int = df.beer_abv.idxmax()
     max_abv_beer: Any = df.loc[max_abv_index]
-    print(f"\n\tHighest ABV: {max_abv_beer["beer_name"]} ({max_abv_beer["brewery_name"]}) - {max_abv_beer["beer_abv"]}%")
+    print(f"\n\tHighest ABV: {max_abv_beer.beer_name} ({max_abv_beer.brewery_name}) - {max_abv_beer.beer_abv}%")
 
     # Get the average ABV.
-    print(f"\n\tAverage ABV: {round(df["beer_abv"].mean(), 2)}%")
+    print(f"\n\tAverage ABV: {round(df.beer_abv.mean(), 2)}%")
 
     # Get the beer with the highest IBU.
-    year_max_ibu_index: int = df["beer_ibu"].idxmax()
+    year_max_ibu_index: int = df.beer_ibu.idxmax()
     year_max_ibu_beer: Any = df.loc[year_max_ibu_index]
-    print(f"\n\tHighest IBU: {year_max_ibu_beer["beer_name"]} ({year_max_ibu_beer["brewery_name"]}) - {year_max_ibu_beer["beer_ibu"]}")
+    print(f"\n\tHighest IBU: {year_max_ibu_beer.beer_name} ({year_max_ibu_beer.brewery_name}) - {year_max_ibu_beer.beer_ibu}")
 
     # Get the average IBU.
-    print(f"\n\tAverage IBU: {round(df["beer_ibu"].mean(), 2)}")
+    print(f"\n\tAverage IBU: {round(df.beer_ibu.mean(), 2)}")
 
     _print_field_data(df, "beer_type", "distinct styles")
     _print_field_data(df, "beer_type", "grouped styles", _string_split)
@@ -121,17 +119,25 @@ def _get_grouped_stats(df: DataFrame) -> None:
     _print_field_data(df, "venue_country", "venue countries")
     _print_field_data(df, "serving_type", "serving type")
 
-    month_groups = df.groupby(df["created_at"].dt.month)
+    month_groups = df.groupby(df.created_at.dt.month)
 
     print("\n\tCheckins by month:")
     for month, group in month_groups:
         print(f"\t\t{calendar.month_name[month]}: {len(group)}")
 
-    day_groups = df.groupby(df["created_at"].dt.dayofweek)
+    day_groups = df.groupby(df.created_at.dt.dayofweek)
 
     print("\n\tCheckins by day of week:")
     for day, group in day_groups:
         print(f"\t\t{calendar.day_name[day]}: {len(group)}")
+
+
+def _load_data_file(data_file_path: Path) -> list[str]:
+    data: list[str] = []
+    with data_file_path.open(encoding='utf-8') as f:
+        data = json.load(f)
+
+    return data
 
 
 def _print_field_data(df: DataFrame, field: str, field_friendly_name: str, transform: Optional[Callable[[Series], Series]] = None) -> None:
@@ -155,7 +161,7 @@ def _update_dataframe(df: DataFrame) -> None:
 
     # Do some initial modification of the data.
     # Convert the `created_at` data to be datetimes.
-    df['created_at'] = pd.to_datetime(df['created_at'], errors='raise')
+    df.created_at = pd.to_datetime(df.created_at, errors='raise')
 
     # Remove the venue country for `Untappd at Home` checkins so that
     # it isn't included in the venue countries stats.
