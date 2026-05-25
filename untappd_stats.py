@@ -1,3 +1,4 @@
+import calendar
 import json
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -119,6 +120,18 @@ def _get_grouped_stats(df: DataFrame) -> None:
     _print_field_data(df, "venue_name", "venues")
     _print_field_data(df, "venue_country", "venue countries")
     _print_field_data(df, "serving_type", "serving type")
+
+    month_groups = df.groupby(df["created_at"].dt.month)
+
+    print("\n\tCheckins by month:")
+    for month, group in month_groups:
+        print(f"\t\t{calendar.month_name[month]}: {len(group)}")
+
+    day_groups = df.groupby(df["created_at"].dt.dayofweek)
+
+    print("\n\tCheckins by day of week:")
+    for day, group in day_groups:
+        print(f"\t\t{calendar.day_name[day]}: {len(group)}")
 
 
 def _print_field_data(df: DataFrame, field: str, field_friendly_name: str, transform: Optional[Callable[[Series], Series]] = None) -> None:
