@@ -31,18 +31,18 @@ def parse_checkins_file(input_file: Path) -> None:
     year_counts: Series[int] = df.created_at.dt.year.value_counts()
     busiest_year: int = year_counts.idxmax()
     busiest_count: int = year_counts.max()
-    print(f"\nBusiest year was {busiest_year} with {busiest_count} check-ins")
+    print(f"\nBusiest year: {busiest_year} - {busiest_count} check-ins")
 
     data_dir: Path = Path("data")
 
-    # Get the percent of styles that there is a check in for.
+    # Get the percent of styles that there is a check-in for.
     styles: list[str] = _load_data_file(data_dir / "styles.json")
     checked_in_styles: set[str] = set(df.beer_type)
 
     styles_percentage: float = (len(checked_in_styles) / len(styles)) * 100
     print(f"\nPercent of styles: {round(styles_percentage, 2)}%")
 
-    # Get the percent of brewery countries that there is a check in for.
+    # Get the percent of brewery countries that there is a check-in for.
     countries: list[str] = _load_data_file(data_dir / "countries.json")
     checked_in_countries: set[str] = set(df.brewery_country)
 
@@ -70,13 +70,13 @@ def _get_grouped_stats(df: DataFrame) -> None:
     print(f"\tTotal number of unique beers: {num_unique_beers}")
 
     # Get first and last check-in.
-    print(f"\n\tFirst check-in at {df.created_at.min()}")
-    print(f"\tLast check-in at {df.created_at.max()}")
+    print(f"\n\tFirst check-in: {df.created_at.min()}")
+    print(f"\tLast check-in: {df.created_at.max()}")
 
-    # Only print out if there any beers with more than one checkin.
+    # Only print out if there any beers with more than one check-in.
     most_common_beers: Series[int] = df[['beer_name', 'brewery_name']].value_counts()
     if most_common_beers.iloc[0] != 1:
-        print("\n\tMost checked in beers:")
+        print("\n\tMost checked-in beers:")
         for value, count in most_common_beers.head(5).items():
             if count == 1:
                 break
@@ -85,12 +85,12 @@ def _get_grouped_stats(df: DataFrame) -> None:
     print("\n\tHighest rated beers:")
     highest_rated: DataFrame = df.nlargest(5, "rating_score")
     for _, row in highest_rated.iterrows():
-        print(f"\t\t{row.beer_name} ({row.brewery_name}) - {row.rating_score}")
+        print(f"\t\t{row.beer_name} ({row.brewery_name}): {row.rating_score}")
 
     print("\n\tLowest rated beers:")
     lowest_rated: DataFrame = df.nsmallest(5, "rating_score")
     for _, row in lowest_rated.iterrows():
-        print(f"\t\t{row.beer_name} ({row.brewery_name}) - {row.rating_score}")
+        print(f"\t\t{row.beer_name} ({row.brewery_name}): {row.rating_score}")
 
     # Get the average rating.
     print(f"\n\tAverage rating: {round(df.rating_score.mean(), 2)}")
@@ -121,13 +121,13 @@ def _get_grouped_stats(df: DataFrame) -> None:
 
     month_groups = df.groupby(df.created_at.dt.month)
 
-    print("\n\tCheckins by month:")
+    print("\n\tCheck-ins by month:")
     for month, group in month_groups:
         print(f"\t\t{calendar.month_name[month]}: {len(group)}")
 
     day_groups = df.groupby(df.created_at.dt.dayofweek)
 
-    print("\n\tCheckins by day of week:")
+    print("\n\tCheck-ins by day of week:")
     for day, group in day_groups:
         print(f"\t\t{calendar.day_name[day]}: {len(group)}")
 
@@ -146,7 +146,7 @@ def _print_field_data(df: DataFrame, field: str, field_friendly_name: str, trans
 
     count: int = counts.count()
     if count:
-        print(f"\n\tTotal number of {field_friendly_name} {count}")
+        print(f"\n\tTotal number of {field_friendly_name}: {count}")
         print(f"\tTop 5 {field_friendly_name}: ")
         for value, count in counts.head(5).items():
             print(f"\t\t{value}: {count}")
@@ -163,7 +163,7 @@ def _update_dataframe(df: DataFrame) -> None:
     # Convert the `created_at` data to be datetimes.
     df.created_at = pd.to_datetime(df.created_at, errors='raise')
 
-    # Remove the venue country for `Untappd at Home` checkins so that
+    # Remove the venue country for `Untappd at Home` check-ins so that
     # it isn't included in the venue countries stats.
     df.loc[df.venue_name == "Untappd at Home", "venue_country"] = None
 
