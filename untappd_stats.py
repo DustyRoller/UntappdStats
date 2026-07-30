@@ -1,7 +1,8 @@
 import calendar
 import json
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 from dateutil.relativedelta import relativedelta
 
@@ -140,7 +141,7 @@ def _load_data_file(data_file_path: Path) -> list[str]:
     return data
 
 
-def _print_field_data(df: DataFrame, field: str, field_friendly_name: str, transform: Optional[Callable[[Series], Series]] = None) -> None:
+def _print_field_data(df: DataFrame, field: str, field_friendly_name: str, transform: Callable[[Series], Series] | None = None) -> None:
     series: Series[Any] = df[field] if transform is None else transform(df[field])
     counts: Series[int] = series.value_counts()
 
@@ -169,8 +170,8 @@ def _update_dataframe(df: DataFrame) -> None:
 
 
 if __name__ == '__main__':
+    import sys
     from argparse import ArgumentParser, Namespace
-    from sys import exit
 
     arg_parser: ArgumentParser = ArgumentParser()
     arg_parser.add_argument('--checkins_file', required=True, type=Path)
@@ -178,11 +179,11 @@ if __name__ == '__main__':
     args: Namespace = arg_parser.parse_args()
 
     if not args.checkins_file.is_file():
-        exit(f"File does not exist: {args.checkins_file}")
+        sys.exit(f"File does not exist: {args.checkins_file}")
 
     expected_file_ext: str = ".csv"
     if args.checkins_file.suffix != expected_file_ext:
-        exit(f"checkins_file must be a {expected_file_ext} file")
+        sys.exit(f"checkins_file must be a {expected_file_ext} file")
 
     print(f"Parsing {args.checkins_file}\n")
     parse_checkins_file(args.checkins_file)
