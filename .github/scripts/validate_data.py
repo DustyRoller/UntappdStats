@@ -1,5 +1,6 @@
 import json
 import locale
+import sys
 import unicodedata
 from pathlib import Path
 
@@ -23,14 +24,14 @@ for file in files:
 
         # Make sure the file doesn't include any duplicate values.
         if len(data) != len(set(data)):
-            exit(f"{file} contains duplicate entries")
+            sys.exit(f"{file} contains duplicate entries")
 
         # Make sure the values are in alphabetical order.
         sorted_data: list[str] = sorted(data, key=normalise_string)
 
         if data != sorted_data:
             for i, d in enumerate(data):
-                if data[i] != sorted_data[i]:
-                    print(data[i])
+                if d != sorted_data[i]:
+                    print(d)
                     print(sorted_data[i])
-            exit(f"{file} is not in alphabetical order")
+            sys.exit(f"{file} is not in alphabetical order")
