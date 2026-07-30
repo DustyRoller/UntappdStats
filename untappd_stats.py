@@ -43,6 +43,15 @@ def parse_checkins_file(input_file: Path) -> None:
     styles_percentage: float = (len(checked_in_styles) / len(styles)) * 100
     print(f"\nPercent of styles: {round(styles_percentage, 2)}%")
 
+    # Group the data by years.
+    year_groups: DataFrameGroupBy[Any] = df.groupby(df.created_at.dt.year)
+
+    # Find the year with the most unique styles.
+    unique_styles_counts: Series[int] = year_groups["beer_type"].nunique()
+    top_year: int = unique_styles_counts.idxmax()
+    max_count: int = unique_styles_counts.max()
+    print(f"\nYear with most styles {top_year} - {max_count}")
+
     # Get the percent of brewery countries that there is a check-in for.
     countries: list[str] = _load_data_file(data_dir / "countries.json")
     checked_in_countries: set[str] = set(df.brewery_country)
@@ -56,7 +65,6 @@ def parse_checkins_file(input_file: Path) -> None:
 
     print("\nYear breakdown\n")
 
-    year_groups: DataFrameGroupBy[Any] = df.groupby(df.created_at.dt.year)
     for year, group in year_groups:
         print(f"{year} stats")
         _get_grouped_stats(group)
