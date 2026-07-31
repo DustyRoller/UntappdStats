@@ -9,7 +9,7 @@ jobs:
   validate-json:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6.0.1
+      - uses: actions/checkout@v7.0.1
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
