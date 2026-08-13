@@ -46,11 +46,25 @@ def parse_checkins_file(input_file: Path) -> None:
     # Group the data by years.
     year_groups: DataFrameGroupBy[Any] = df.groupby(df.created_at.dt.year)
 
-    # Find the year with the most unique styles.
-    unique_styles_counts: Series[int] = year_groups["beer_type"].nunique()
-    top_year: int = unique_styles_counts.idxmax()
-    max_count: int = unique_styles_counts.max()
-    print(f"\nYear with most styles {top_year} - {max_count}")
+    # Get the year with the most unique styles.
+    top_styles_year, max_styles_count = _get_year_max_value(year_groups, "beer_type")
+    print(f"\nYear with most styles: {top_styles_year} - {max_styles_count}")
+
+    # Get the year with most unique breweries.
+    top_breweries_year, max_breweries_count = _get_year_max_value(year_groups, "brewery_name")
+    print(f"\nYear with most breweries: {top_breweries_year} - {max_breweries_count}")
+
+    # Get the year with most unique brewery countries.
+    top_brewery_country_year, max_brewery_countries_count = _get_year_max_value(year_groups, "brewery_country")
+    print(f"\nYear with most brewery countries: {top_brewery_country_year} - {max_brewery_countries_count}")
+
+    # Get the year with most unique venues.
+    top_venue_year, max_venue_count = _get_year_max_value(year_groups, "venue_name")
+    print(f"\nYear with most venues: {top_venue_year} - {max_venue_count}")
+
+    # Get the year with most unique venue countries.
+    top_venue_country_year, max_venue_countries_count = _get_year_max_value(year_groups, "venue_country")
+    print(f"\nYear with most venue countries: {top_venue_country_year} - {max_venue_countries_count}")
 
     # Get the percent of brewery countries that there is a check-in for.
     countries: list[str] = _load_data_file(data_dir / "countries.json")
@@ -139,6 +153,12 @@ def _get_grouped_stats(df: DataFrame) -> None:
     print("\n\tCheck-ins by day of week:")
     for day, group in day_groups:
         print(f"\t\t{calendar.day_name[day]}: {len(group)}")
+
+
+def _get_year_max_value(year_groups: DataFrameGroupBy[Any], value: str) -> tuple[int, int]:
+    # Get the year with the most unique styles.
+    unique_styles_counts: Series[int] = year_groups[value].nunique()
+    return unique_styles_counts.idxmax(), unique_styles_counts.max()
 
 
 def _load_data_file(data_file_path: Path) -> list[str]:
